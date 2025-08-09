@@ -1,0 +1,38 @@
+name: Merge upstream changes into fork
+
+on:
+  # Run daily at midnight UTC; adjust cron as desired
+  schedule:
+    - cron: '0 0 * * *'
+  # Allow manual dispatch
+  workflow_dispatch:
+
+jobs:
+  merge-upstream:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          # Fetch full history for merge operations
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git user
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Add upstream remote
+        run: git remote add upstream https://github.com/ArduPilot/ardupilot.git
+
+      - name: Fetch upstream
+        run: git fetch upstream
+
+      - name: Merge upstream/master into master
+        run: git merge upstream/master --no-edit
+
+      - name: Push merged changes
+        run: git push origin HEAD:master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
